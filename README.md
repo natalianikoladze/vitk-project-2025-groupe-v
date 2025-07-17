@@ -10,7 +10,7 @@ Simon Campredon
 
 ## 1. Introduction
 
-Ce projet a pour but de réaliser un recalage d’images médicales (IRM ou autres modalités) en utilisant la librairie `ITK` en Python. Le recalage permet d’aligner deux images issues d’une même région anatomique mais prises à des temps ou conditions différentes.
+Ce projet a pour but de réaliser une segmentation d’images médicales (IRM ou autres modalités) en utilisant la librairie `ITK` en Python. La segmentation aide à identifier et isoler des objets spécifiques au sein d'une image, rendant les processus automatisés comme la reconnaissance d'objets plus efficaces.
 
 ---
 
@@ -18,7 +18,7 @@ Ce projet a pour but de réaliser un recalage d’images médicales (IRM ou autr
 
 - Lire deux images médicales au format `.nrrd`
 - Aligner la seconde image sur la première
-- Appliquer une transformation de **translation** pour corriger le décalage
+- Appliquer une transformation de translation pour appliquer la segmentation
 - Visualiser les résultats
 
 ---
@@ -32,79 +32,16 @@ Ce projet a pour but de réaliser un recalage d’images médicales (IRM ou autr
 ---
 
 ## 4. ⚙️ Description du traitement
-
-### Étape 1 – Chargement des données
-```python
-file1_path = "Data/case6_gre1.nrrd"
-file2_path = "Data/case6_gre2.nrrd"
-
-PixelType = itk.F
-fixed_image = itk.imread(file1_path, PixelType)
-moving_image = itk.imread(file2_path, PixelType)
-```
-
-
-### Étape 2 – Définition de la transformation (Translation uniquement)
-```python
-TransformType = itk.TranslationTransform[itk.D, dimension]
-initial_transform = TransformType.New()
-initial_transform.SetIdentity()
-```
-
-### Étape 3 – Choix de la métrique et de l'optimiseur
-```python
-optimizer = itk.RegularStepGradientDescentOptimizerv4.New()
-optimizer.SetLearningRate(4.0)
-optimizer.SetMinimumStepLength(0.001)
-optimizer.SetNumberOfIterations(100)
-
-metric = itk.MeanSquaresImageToImageMetricv4[FixedImageType, MovingImageType].New()
-interpolator = itk.LinearInterpolateImageFunction[FixedImageType, itk.D].New()
-metric.SetFixedInterpolator(interpolator)
-```
-
-### Étape 4 – Méthode de recalage
-```python
-registration = itk.ImageRegistrationMethodv4[FixedImageType, MovingImageType].New()
-registration.SetFixedImage(fixed_image)
-registration.SetMovingImage(moving_image)
-registration.SetInitialTransform(initial_transform)
-registration.SetMetric(metric)
-registration.SetOptimizer(optimizer)
-
-registration.Update()
-```
-
-### Étape 5 – Application de la transformation et sauvegarde
-```python
-resampler = itk.ResampleImageFilter[MovingImageType, FixedImageType].New()
-resampler.SetInput(moving_image)
-resampler.SetTransform(final_transform)
-resampler.SetUseReferenceImage(True)
-resampler.SetReferenceImage(fixed_image)
-resampler.SetDefaultPixelValue(0)
-resampler.Update()
-
-aligned_image = resampler.GetOutput()
-```
-
-### Étape 6 - Segmentation des images
-```
-smooth_fixed = anisotropic_diffusion(fixed_image)
-segmentation_fixed = region_growing(smooth_fixed, seed_coords, multiplier=2.3)
-segmentation_fixed_8bit = rescale_to_8bit(segmentation_fixed)
-save_image(segmentation_fixed_8bit, "segmentation_fixed.nii.gz")
-
-smooth_aligned = anisotropic_diffusion(aligned_image)
-segmentation_aligned = region_growing(smooth_aligned, seed_coords, multiplier=2.5)
-segmentation_aligned_8bit = rescale_to_8bit(segmentation_aligned)
-save_image(segmentation_aligned_8bit, "segmentation_aligned.nii.gz")
-```
-
+- Chargement des données
+- Définition de la transformation (translation)
+- Choix de la métrique et de l'optimiseur
+- Choix du recalage
+- Application de la transformation
+- Segmentation des images
 
 ---
 
-## 6. Choix techniques et justification
+## 5. Choix techniques et justification
 
 | Élément         | Choix                           | Justification |
 |----------------|----------------------------------|---------------|
@@ -115,10 +52,10 @@ save_image(segmentation_aligned_8bit, "segmentation_aligned.nii.gz")
 
 ---
 
-## 7. ⚠️ Problème rencontré
+## 6. ⚠️ Problème rencontré
 Lors de nos tests, l'ajout d'un optimizer après une transformation bspline normale, a cause d'une fonction interne. Après plusieurs recherches, nous avons trouvé que le problème venait de l'implémentation. Notre implémentation aurait marcher dans une logique C++, mais dans notre cas, nous étions en python. Pour confirmer ceci nous avons essayer d'autres metrics ou optimizer. Puisque ces implémentations ne fonctionnent pas dans notre cas en Python, nous avons une transform composé d'une translation, puis d'un bspline.
 
-## 8. Limites
+## 7. Limites
 
 - Type de transformation limité : seule une transformation de translation est utilisée, ce qui ne permet pas de corriger des déformations plus complexes.
 
@@ -127,7 +64,7 @@ Lors de nos tests, l'ajout d'un optimizer après une transformation bspline norm
 
 ---
 
-## 9. Instructions d'utilisation
+## 8. Instructions d'utilisation
 
 1. Placer les fichiers `.nrrd` dans un dossier `Data/`
 2. Installer les dépendances :
@@ -143,5 +80,5 @@ python main.py
 
 ---
 
-## 10. ✅ Résultats
+## 9. ✅ Résultats
 - Alignement visuel réussi : les images recalées montrent un bon alignement des structures anatomiques principales après translation.
