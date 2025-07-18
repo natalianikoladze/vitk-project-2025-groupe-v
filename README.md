@@ -13,6 +13,8 @@ Simon Campredon
 Ce projet a pour but de réaliser une segmentation d’images médicales (IRM ou autres\
 modalités) en utilisant la librairie `ITK` en Python, et de visualiser le rendu en\
 utilisant la librairie `VTK` en Python.
+La segmentation aide à identifier et isoler des objets spécifiques au sein d'une\
+image, rendant les processus automatisés comme la reconnaissance d'objets plus efficaces.
 
 ---
 
@@ -37,16 +39,23 @@ utilisant la librairie `VTK` en Python.
 
 ## 4. Description du traitement
 
-- Étape 1 – Chargement des données
+- Chargement des données
 Récupération des .nrrd dans le dossier Data.
-
-- Étape 2 – Définition de la transformation (Translation).
+\
+- Définition de la transformation (Translation).
 Permet de repositionner l'image entre deux scans au cas où le cerveau serait légèrement décalé.
-- Étape 3 – Définition de la transformation (B-spline)
+\
+- Choix de la métrique et de l'optimiseur.
+\
+– Définition de la transformation (B-spline)
 Adapté aux changement locaux, comme le changement de taille d'une tumeur.
-- Étape 4 – Application de la transformation composite (Translation/B-spline) et sauvegarde\
+\
+- Choix du recalage
+\
+– Application de la transformation composite (Translation/B-spline) et sauvegarde\
 de l'image "aligned_image.nii.gz".
-- Étape 5 – Application de la segmentation sur les images fixed et 
+\
+– Segmentation des images
 Segmentation de la tumeur sur les images "fixed_image.nii.gz" et "aligned_image.nii.gz".
 Sauvegarde des images "segmentation_fixed.nii.gz" et "segmentation_aligned.nii.gz"
 
@@ -61,7 +70,6 @@ ITK étant malheureusement très mal documenté, nous n'avons pas pu trouver de 
 qui fonctionne. Nous avons donc dû laisser BSpline sans optimizer.
 
 ## 6. Instructions d'utilisation
-
 1. Placer les fichiers `.nrrd` dans un dossier `Data/`
 2. Installer les dépendances :
 ```bash
